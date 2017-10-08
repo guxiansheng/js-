@@ -1,0 +1,90 @@
+hello world:
+
+　　花了8天时间终于把大神的富文本编辑器学习完毕，例子也写了5遍。懂了大楷85%的样子 。其余15%主要是 对dom事件底层api的不熟悉 和 对不同浏览器下 dom事件的兼容问题。
+
+　　
+
+为什么富文本编辑器要用iframe来做
+ 跨浏览器兼容
+2. iframe内容编辑 不会影响到 当前文档的内容
+3. iframe是一个编辑即所得的容器
+　　写这边博客 主要是记录一下学习中的要点 难点 和 巩固一下。
+　　首先整个 设计是 最开始是面向过程 然后采用面向对象的写法封装了起来。
+　　 代码一开始 用js 写了一个动态设置css样式的 方法 下面是代码 
+/*动态添加样式表规则*/
+var _add_sheet = function(){
+var doc,cssCode;
+if (arguments.length == 1) {
+    doc = document;
+    cssCode = arguments[0];
+} else if (arguments.length == 2) {
+    doc = arguments[0];
+    cssCode = arguments[1];
+} else {
+    alert("addSheet函数最多接受两个参数!");
+}
+var headElement = doc.getElementsByTagName("head")[0];
+var styleElements = headElement.getElementsByTagName("style");
+if (styleElements.length == 0) { // 如果没有 就添加
+    if (!+"\v1") { // IE
+    doc.createStyleSheet();
+} else {
+    var tempStyleElement = doc.createElement("style"); // w3c
+    tempStyleElement.setAttribute("type", "text/css");
+    headElement.appendChild(tempStyleElement);
+}
+};
+var styleElement = styleElements[0];
+var media = styleElement.getAttribute("media");
+if (media != null && !/screen/.test(media.toLowerCase())) {
+    styleElement.setAttribute("media", "screen");
+};
+if (!+"\v1") { // IE
+    styleElement.styleSheet.cssText += cssCode;
+} else if (/a/[-1] == 'a') { // FF
+    styleElement.innerHTML += cssCode;
+} else {
+    styleElement.appendChild(doc.createTextNode(cssCode));
+    }
+}
+ 
+这个方法的知识点  ：
+　　一 ：  getelmentsByTagName 方法是动态的。
+　　二 ：  !+"\v1"可以判断是否是IE浏览器 
+　　三 ：  在ie 下 创建style元素 直接    doc.createStyleSheet();搞定
+　　四 ：  在ie下 和 FF下 还有w3c下为style元素 添加css样式 方法不一样
+　　
+if (!+"\v1") { // IE
+　　styleElement.styleSheet.cssText += cssCode;
+} else if (/a/[-1] == 'a') { // FF
+　　styleElement.innerHTML += cssCode;
+} else {
+　　styleElement.appendChild(doc.createTextNode(cssCode));
+}
+ 
+　　绑定事件的方法
+　　
+addEvent : function(el, type, fn){
+　　if (!+"\v1") {
+　　　　el['e'+type+fn] = fn;
+　　　　el.attachEvent( 'on' + type, function(){
+　　　　　　el['e'+type+fn]();
+　　　　})
+　　} else {
+　　　　el.addEventListener(type, fn, false);
+　　}
+},
+ 
+　　这里还学习到一个 创建闭包的方法：
+　　
+for(var i = 0,l= buttons.length;i<l;i++){
+　　buttons[i].onclick = new function(){***********************创建闭包**************************代替了（function( i ) { }）（i）这种匿名函数立即执行的写法
+　　　　var button=buttons[i];
+　　　　return function(){
+　　　　　　document.getElementById("exe").innerHTML ="调用了"+button.getAttribute("title")+"命令";
+　　　　}
+　　};
+};
+
+最为主要还是关于 iframe的用法和兼容 。由于时间关系 明天再写吧！！！
+ 

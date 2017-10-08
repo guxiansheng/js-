@@ -1,0 +1,75 @@
+hello world:
+
+　　今天继续昨天没有总结完的富文本编辑器的学习点滴...昨天已经聊过了 这次学习的富文本编辑器 主要是用iframe来做的 。所以我们来看看 有哪些兼容 和难点 。
+　　第一个 要说的就是 iframe 的兼容性 还有 命令  所有字体特效只是使用execComman()就能完成。 
+　　在 w3c的浏览器下 iframe 是不能挂载任何事件的 所有对于iframe的 事件操作 全部被放到了 iframe.contentWindow上面来了。
+　　在使用iframe编辑我们的内容以前 我们要这样写：
+　　
+
+var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+iframeDocument.designMode = 'on';
+iframeDocument.open();
+iframeDocument.write('<html><head><style type="text/css">body{ font-family:arial; font-size:13px;background:#DDF3FF;border:0; }</style></head></html>');
+iframeDocument.close();
+　　现在已经为编辑准备 好了容器 ，可以开始干了哦！！！
+　　
+　　这里面的几个难点：
+　　1.光标记录和激活
+　　
+var _insertHTML = function(html){
+　　iframe.contentWindow.focus();
+　　if(!+"\v1"){   // IE
+　　　　/****这里需要解决IE丢失光标位置的问题，详见核心代码四**************/
+　　　　iframeDocument.selection.createRange().pasteHTML(html);
+　　　　//获得选区对象
+　　　　//粘贴到选区的html内容, 会替换选择的内容.
+　　}else{
+　　　　
+　　　　//非IE浏览器
+　　　　var selection = iframe.contentWindow.getSelection();
+　　　　var range;
+　　　　if (selection) {
+　　　　　　range = selection.getRangeAt(0);
+　　　　}else {
+　　　　　　range = iframeDocument.createRange();
+　　　　}
+　　　　var oFragment = range.createContextualFragment(html),
+　　　　oLastNode = oFragment.lastChild ;
+　　　　range.insertNode(oFragment) ;
+　　　　range.setEndAfter(oLastNode ) ;
+　　　　range.setStartAfter(oLastNode );
+　　　　selection.removeAllRanges();//清除选择
+　　　　selection.addRange(range);
+　　}
+}
+　　这里面 有很多api 是平常 没有在见过的 更别说用过了
+　　
+　　相关知识：
+
+setSelectionRange
+document.selection  IE/Opera支持 Firefox/Safari/Chrome不支持
+createRange()  IE/Opera支持 Firefox/Safari/Chrome不支持
+createTextRange()  IE支持 Firefox/Safari/Chrome/Opera不支持
+window.getSelection()  Firefox/Safari/Chrome/Opera支持 IE不支持
+　　
+　　
+/*当光标离开iframe再进入时默认放在body的第1个节点上了，所以要记录光标的位置***/
+if (!+"\v1") {
+　　var bookmark;
+　　// 记录IE的编辑光标的位置
+　　$.addEvent(iframe, "beforedeactivate", function(){// 在文档失去焦点以前
+　　　　var range = iframeDocument.selection.createRange();
+　　　　bookmark = range.getBookmark();
+　　});
+　　// 恢复Ie的编辑光标
+　　$.addEvent(iframe, "activate", function(){
+　　　　if (bookmark) {
+　　　　　　var range = iframeDocument.body.createTextRange();
+　　　　　　range.moveToBookmark(bookmark);
+　　　　　　range.select();
+　　　　　　bookmark = null;
+　　　　};
+　　});
+};
+主要就是兼容问题比较难搞 感觉
+这些 api 还是得自己看看 回头研究透彻了 再来补一章吧 ！！！ 
