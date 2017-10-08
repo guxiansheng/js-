@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>跨浏览器的日期选择器</title>
+<style>
+#jcalendar {
+width:210px;
+background:#E0ECF9;
+border:1px solid #479AC7;
+float:left;
+}
+ 
+#jcalendar span {
+float:left;
+width:210px;
+height:20px;
+background:#479AC7;
+color:#f90;
+font-weight:bolder;
+text-align:center;
+}
+ 
+#jcalendar .week {
+background:#D5F3F4;
+color:gray;
+}
+ 
+#jcalendar .current {
+background:#369;
+color:#fff;
+}
+ 
+#jcalendar a {
+display:block;
+float:left;
+width:30px;
+height:20px;
+color:#000;
+line-height:20px;
+text-align:center;
+text-decoration:none;
+}
+ 
+#jcalendar tt {
+color:#000040;
+}
+ 
+#jcalendar .weekend {
+color:#f00 !important;
+}
+ 
+#jcalendar a.day:hover {
+background:#99C3F6;
+}
+#jcalendar kbd{
+display:block;
+font:normal 12px/20px "Comic Sans MS", "Microsoft YaHei", sans-serif;
+}
+</style>
+</head>
+<body bgcolor="gray">
+<div style="margin:40px;background:#D7FFF0;width:500px;height:400px">
+<form >
+<input id="datepicker" value="1990-1-1" title="日历在俺右边" /><br />
+<select>
+<option>看你能不能挡住我</option>
+<option>看你能不能挡住我</option>
+<option>看你能不能挡住我</option>
+<option>看你能不能挡住我</option>
+<option>看你能不能挡住我</option>
+</select>
+</form>
+</div>
+<script src="hDatePicker.js"></script>
+</body>
+</html>
+ 
+ 
+************************************************************************************行为层代码********************************************************************************
+(function(){
+var Class = {
+create : function (){
+return function (){
+this.initialize.apply(this, arguments);
+}
+}
+};
+var extend = function(destination, source){
+for (var property in source) {
+destination[property] = source[property];
+};
+return destination;
+};
+/**
+* 开始构建
+*/
+var Jcalendar = Class.create();
+Jcalendar.prototype = {
+/**
+* 初始化
+*/
+initialize : function(options){
+this.setOptions(options);
+var $ = new Date();
+this.drawCalendar($.getFullYear(), $.getMonth() + 1, $.getDate());
+},
+/**
+* 设置默认属性 合并传进来的属性
+*/
+setOptions : function(options){
+this.options = {
+id : 'jcalendar_'+ new Date().getTime(),
+text_id : null, // 用于输入日期的文本域的ID
+parent_id : null // 指定父节点
+};
+extend(this.options, options || {});
+},
+/**
+* 获取当前月日期数据 返回数组
+*/
+fillArray : function(year, month){
+var f = new Date(year, month - 1, 1).getDay(), // 求出当前月的 第一天是星期几
+dates = new Date(year, month, 0).getDate(), // 求出当前月一共多少天
+arr = new Array(42); // 用来装载日期数据的数组
+for (var i = 0; i < dates; i++, f++) {
+arr[f] = year +'-'+ month +'-'+ (i + 1);
+};
+return arr;
+},
+/**
+* 插入dom
+*/
+addToDom : function(calendar){
+var parent = document.getElementById(this.options.parent_id) || document.getElementsByTagName('body')[0];
+parent.insertBefore(calendar, null);
+},
+/**
+* 创建日期dom树碎片
+*/
+drawCalendar : function(year, month, date){
+var $ = document, $$ = 'createElement', calendar = this.getHandle(),
+weeks = '日一二三四五六'.split(''), // 显示的星期几
+a = $[$$]('a'), // 日历的a元素 用于克隆
+tt = $[$$]('tt'), // 日历的头部元素
+thead = $[$$]('span'), // 日历的头部
+fragment = $.createDocumentFragment(), // 文档碎片
+arr = this.fillArray(year, month), // 获取当月的日期
+tts = [], // 用于保存tt元素 (箭头按钮)的引用
+text_id = this.options.text_id, // 用于输入日期的文本域的ID
+_selt = this; // 保存实例对象的引用
+if (calendar) {
+calendar.innerHTML = '';
+} else {
+calendar = $[$$]('div'); // 日历的容器
+this.addToDom(calendar); // 把日历容器插入dom树
+calendar.setAttribute('id', this.getId()); // 设置ID
+}
+
+for (let i = 0; i < 4; i++) { // 生成日历顶部箭头按钮
+var clone = tt.cloneNode(true) // 比createElement快些
+clone.onclick = (function (index) {
+return function(){
+_selt.redrawCalendar(year, month, date, index);
+};
+})(i)
+tts[i] = clone; // 保存引用
+if (i == 2) thead.appendChild($.createTextNode(year+'年'+month+'月'+date+'日'));
+thead.appendChild(clone);
+}
+
+tts[0].innerHTML = '&lt;&lt;';
+tts[1].innerHTML = '&nbsp;&nbsp;&lt;';
+tts[2].innerHTML = '&gt;&nbsp;&nbsp;';
+tts[3].innerHTML = '&gt;&gt;';
+fragment.appendChild(thead);
+
+for (let j = 0; j < 7; j++) { // 生成星期几
+let th = a.cloneNode(true);
+th.innerHTML = weeks[j];
+th.className = 'week';
+fragment.appendChild(th);
+};
+
+for (let k = 0; k < 42; k++) {
+let td = a.cloneNode(true);
+if (arr[k] == undefined) {
+fragment.appendChild(td);
+} else {
+let html = arr[k].split('-')[2];
+td.innerHTML = html;
+td.className = 'day';
+td.href = "javascript: void(0)"; // ie6专用
+(date && html == date) && (td.className += ' current');
+(k % 7 == 0 || k % 7 == 6) && (td.className += ' weekend');
+td.onclick = (function(i){
+return function(){
+text_id && ($.getElementById(text_id).value = i);
+calendar.style.display = 'none';
+if (/msie|MSIE 6/.test(navigator.userAgent)) {
+var mask = document.getElementById("calendar_mask");
+mask.parentNode.removeChild(mask);
+}
+};
+})(arr[k]);
+fragment.appendChild(td);
+}
+};
+calendar.appendChild(fragment);
+},
+getId : function(){
+return this.options.id;
+},
+getHandle : function(){
+return document.getElementById(this.getId());
+},
+// 监听文本域
+listenTo : function(id){
+id = id || this.options.text_id;
+if (id && document.getElementById(id)) {
+let calendar = this.getHandle(),
+textfield = document.getElementById(id);
+calendar.style.display = 'none';
+textfield.onfocus = function(){
+textfield.style.position = 'relative';
+let l = textfield.offsetLeft + 'px',
+t = (textfield.clientHeight + textfield.offsetTop) + 'px';
+if (/msie|MSIE 6/.test(navigator.userAgent)) {
+var iframe = document.createElement("<iframe id='calendar_mask' style='left:"+l+";width:300px;filter:mask();position:absolute;"+";top:"+t+"height:160px;z-index:1'></iframe>")
+textfield.parentNode,insertBefore(iframe, textfield);
+}
+with(calendar.style){
+position="absolute";
+display = 'block';
+zIndex = 100;
+left = l;
+top = t;
+}
+};
+}
+},
+redrawCalendar : function(year, month, date, index){
+switch (index) {
+case 0:
+year--;
+break;
+case 1:
+month--;
+break;
+case 2:
+month++;
+break;
+case 3:
+year++;
+break;
+}
+this.drawCalendar(year, month, date);
+}
+};
+window.onload = function(){
+new Jcalendar({
+id : 'jcalendar',
+text_id : 'datepicker'
+}).listenTo();
+};
+})();
+
+
+ 
+/**
+* 重构
+*/
+
+(function(){
+var Class = {
+create : function(){
+return function(){
+this.initialize.apply(this, arguments);
+};
+}
+};
+
+var extend = function(destination, source){
+for (var property in source) {
+destination[property] = source[property];
+};
+return destination;
+};
+
+var Jcalendar = Class.create();
+Jcalendar.prototype = {
+initialize : function(options){
+this.setOptions(options);
+var $ = new Date();
+this.drawCalendar($.getFullYear(), $.getMonth() + 1, $.getDate());
+},
+setOptions : function(options){
+this.options = {
+id : 'jcalendar_' + new Date().getTime(),
+text_id : null,
+parent_id: null
+};
+extend(this.options, options);
+},
+
+ID : function(id){return document.getElementById(id)},
+TN : function(tn){return document.getElementsByTagName(tn)},
+CE : function(s){return document.createElement(s)},
+getHandle : function(){return this.ID(this.options.id)},
+fillArray : function(year, month){
+var f = new Date(year, month - 1, 1).getDay(),
+dates = new Date(year, month, 0).getDate(),
+arr = new Array(42);
+for (var i = 0; i < dates; i++, f++) {
+arr[f] = year + '-' + month + '-' + (i+1);
+};
+return arr;
+},
+addToDom : function(calendar){
+var parent = this.ID(this.options.parent_id) || this.TN('body')[0];
+parent.insertBefore(calendar, null);
+},
+drawCalendar : function(year, month, date){
+(month < 1) && (year--, month = 12);
+(month > 12) && (year++, month = 1);
+var $ = this,
+T = 'getElementsByTagName',
+calendar = $.getHandle(),
+weeks = '日一二三四五六'.split(''),
+arr = $.fillArray(year, month),
+text_id = $.options.text_id;
+if (calendar) {
+calendar.innerHTML = '';
+} else {
+calendar = $.CE('div');
+$.addToDom(calendar);
+calendar.setAttribute('id', $.options.id);
+}
+calendar.innerHTML += '<span><nobr><tt>&lt;&lt;</tt><tt>&emsp;&lt;</tt>'+ year+'年'+month+'月'+date+'日<tt>&gt;&emsp;</tt><tt>&gt;&gt;</tt></nobr></span>';
+for (let i = 0; i < 7; i++) {
+calendar.innerHTML += '<a class="week">'+weeks[i]+'</a>';
+};
+for (let i = 0; i < 42; i++) {
+calendar.innerHTML += (!arr[i]) ? '<a>&nbsp;</a>' :('<a href="javascript:void(0)" title="'+arr[i]+
+'" class="day'+ ((arr[i].split('-')[2] == date)? ' current':'') +((i%7 == 0 || i%7 == 6)? ' weekend':'')+
+'"><kbd>'+arr[i].split('-')[2]+'</kbd></a>');
+};
+var tts = calendar[T]('tt');
+tts[0].onclick = function(){$.drawCalendar(year-1, month, date)}
+tts[1].onclick = function(){$.drawCalendar(year, month-1, date)}
+tts[2].onclick = function(){$.drawCalendar(year, month+1, date)}
+tts[3].onclick = function(){$.drawCalendar(year+1, month, date)}
+var dates = calendar[T]("kbd"),
+j = dates.length;
+while (--j >= 0) {
+dates[j].onclick = function(){
+var title = this.parentNode.getAttribute("title");
+text_id && ($.ID(text_id).value = title);
+calendar.style.display = 'none';
+if (/msie|MSIE 6/.test(navigator.userAgent)) {
+var mask = $.ID("calendar_mask");
+mask.parentNode.removeChild(mask);
+};
+};
+}
+},
+listenTo : function(id){
+var $ = this;
+id = id || $.options.text_id;
+if (id && $.ID(id)) {
+var calendar = $.getHandle(),
+textfield= $.ID(id);
+calendar.style.display = 'none';
+textfield.onfocus = function(){
+textfield.style.position = 'relative';
+var l = textfield.offsetLeft + 'px',
+t = (textfield.clientHeight + textfield.offsetTop) + 'px';
+debugger;
+if (/msie|MSIE 6/.test(navigator.userAgent)) {
+alert(1)
+var iframe = $.CE("<iframe id='calendar_mask' style='left:"+l
++";width:300px;filter:mask();position:absolute;"+";top:"+t
++"height:160px;z-index:1;'></iframe>")
+textfield.insertAdjacentElement('afterEnd', iframe);
+};
+with(calendar.style){
+position = "absolute";
+display = "block";
+zIndex = 100;
+left = l;
+top = t;
+};
+};
+};
+}
+};
+window.onload = function(){
+new Jcalendar({
+id : 'jcalendar',
+text_id : 'datepicker',
+}).listenTo();
+};
+})();
+ 
+ 
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+ 
+ 
+ 
+ 
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　(代码出自司徒正美大大大大)
