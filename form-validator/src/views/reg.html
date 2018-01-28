@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        ul,li,ol{
+            list-style: none;
+        }
+        .form-wrapper{
+            width: 500px;
+            height: 400px;
+            margin: 100px auto;
+        }
+        .form-wrapper li{
+            margin-bottom: 15px;
+        }
+        label{
+            display: inline-block;
+            text-align: right;
+            width: 150px;
+        }
+        .form-text{
+            width: 200px;
+            padding: 10px 0;
+            text-indent: 20px;
+            outline: none;
+            border: 1px solid #e3e3e3;
+            border-radius: 100px;
+        }
+        button{
+            width: 100%;
+            height: 50px;
+        }
+        .input-group.has-success .form-control{
+            border-color:green;
+        }
+        .input-group.has-error .form-control{
+            border-color: #ff0000;
+        }
+        .form-group .tip-error{
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-wrapper">
+        <form id="formValidator" action="./a.php">
+            <ul>
+                <li class="form-group">
+                    <div class="input-group">
+                        <label for="username">昵称</label>
+                        <input id="username" type="text" class="form-control form-text" placeholder="输入昵称" name="username"
+                        data-fv-require=true
+                        data-fv-require-message="昵称不能为空！"
+                        data-fv-regex="^[\u4E00-\u9FA50-9a-zA-Z]{4,16}$"
+                        data-fv-regex-message="昵称长度为4-16位字符，包含汉字/数字/字母，注册后不可修改"
+                        data-fv-range="4-16"
+                        data-fv-range-message="昵称长度为4-16位！"
+                        data-fv-maxlength=16
+                        data-fv-maxlength-message="密码最长为16位数！"
+                        >
+                    </div>
+                </li>
+                <li class="form-group">
+                    <div class="input-group">
+                        <label for="moblie">手机号</label>
+                        <input id="moblie" type="text" class="form-control form-text" placeholder="输入手机号" name="moblie"
+                        data-fv-require=true
+                        data-fv-require-message="手机号码不能为空！"
+                        data-fv-regex="^(13|15|18|17|14)[0-9]{9}$"
+                        data-fv-regex-message="请输入正确合法的手机号码！"
+                        >
+                    </div>
+                </li>
+                <li class="form-group">
+                    <div class="input-group">
+                        <label for="password">登录密码</label>
+                        <input id="password" type="text" class="form-control form-text" placeholder="输入密码" name="password"
+                        data-fv-require=true
+                        data-fv-require-message="密码不能为空！"
+                        data-fv-range="6-16"
+                        data-fv-range-message="密码长度为6-16位！"
+                        data-fv-regex="[^\s]"
+                        data-fv-regex-message="密码必须包含数字和字母（区分大小写）、特殊字符中的2种，不能输入空格"
+                        data-fv-chinese="[\u4E00-\u9FA5]+"
+                        data-fv-chinese-message="密码中不能包含中文！"
+                        >
+                    </div>
+                </li>
+                <li class="form-group">
+                    <div class="input-group">
+                        <label for="confirmpw">确认密码</label>
+                        <input id="confirmpw" type="text" class="form-control form-text" placeholder="确认密码" name="confirmpw"
+                        data-fv-require=true
+                        data-fv-require-message="密码不能为空！"
+                        data-fv-confirmpw=true
+                        data-fv-confirmpw-message="两次输入的密码不一致！"
+                        >
+                    </div>
+                </li>
+                <li class="form-group">
+                    <div class="input-group">
+                        <label for="email">邮箱地址</label>
+                        <input id="email" type="text" class="form-control form-text" placeholder="输入邮箱地址" name="email"
+                        data-fv-require=true
+                        data-fv-require-message="邮箱不能为空！"
+                        data-fv-regex="^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z0-9]+$"
+                        data-fv-regex-message="请输入正确的邮箱地址！"
+                        >
+                    </div>
+                </li>
+                <li class="form-group">
+                    <div class="input-group">
+                        <label for="imgCode">图形验证码</label>
+                        <input id="imgCode" type="text" class="form-control form-text" placeholder="输入验证码" name="imgCode"
+                        data-fv-require=true
+                        data-fv-require-message="验证码不能为空！"
+                        data-fv-regex="^\d{4}$"
+                        data-fv-regex-message="您输入的验证码错误！"
+                        data-fv-maxlength=4
+                        data-fv-maxlength-message="验证码最长为4位数！"
+                        >
+                    </div>
+                </li>
+                <li class="form-group">
+                    <div class="input-group">
+                        <label for="smsCode">短信验证码</label>
+                        <input id="smsCode" type="text" class="form-control form-text" placeholder="输入验证码" name="smsCode"
+                        data-fv-require=true
+                        data-fv-require-message="验证码不能为空！"
+                        data-fv-regex="^\d{4}$"
+                        data-fv-regex-message="您输入的验证码错误！"
+                        >
+                    </div>
+                </li>
+                <li class="form-group">
+                    <div class="input-group">
+                        <label for="is_server">我已阅读并同意</label>
+                        <input id="is_server" type="checkbox" class="form-control is_server" name="is_server" checked="checked"
+                        data-fv-checked=true
+                        data-fv-checked-message=" "
+                        >
+                    </div>
+                </li>
+                <li class="form-group">
+                    <button type="submit">注册</button>
+                </li>
+            </ul>
+        </form>
+    </div>
+    
+    <script src="https://cdn.bootcss.com/zepto/1.2.0/zepto.min.js"></script>
+    <script src="../static/scripts/form-validator.js"></script>
+
+    <script>
+        $("#formValidator").formValidator({
+            // 配置默认触发事件
+            'triggerEvent' : 'blur'
+        })
+        .on("success", function(event) {
+            console.log("验证通过！");
+            // ajax
+        })
+        .on("error", function(event) {
+            // 阻止表单提交
+            console.log("验证失败！");
+            return false;
+        })
+
+        // 扩展身份证验证规则
+        $.fn.formValidator.extendRules({
+            cardid : function(){
+                return /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/.test(this.val());
+            }
+	    });
+    </script>
+</body>
+</html>
